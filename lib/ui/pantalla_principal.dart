@@ -108,7 +108,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                 await g.reiniciarDemo();
                 if (mounted) setState(() {});
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al reiniciar: $e')));
                 }
               }
@@ -190,6 +190,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                                               Text(item.estado, style: TextStyle(
                                                 color: colorEstado(item.estado), fontWeight: FontWeight.bold,
                                               )),
+                                              const SizedBox(height: 6),
+                                              Text('Prioridad: ${item.prioridad}'),
                                             ],
                                           ),
                                         ),
