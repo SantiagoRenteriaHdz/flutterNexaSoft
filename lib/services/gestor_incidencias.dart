@@ -47,21 +47,54 @@ class GestorIncidencias {
     }
   }
 
-  Future<void> crear(String titulo, String descripcion, String cliente,
-      String categoria) async {
-    final nuevo = Incidencia(
-      id: 'INC-${DateTime.now().microsecondsSinceEpoch}',
-      titulo: titulo,
-      descripcion: descripcion,
-      cliente: cliente,
-      categoria: categoria,
-      estado: 'Pendiente',
-      fecha: DateTime.now().toIso8601String().split('T').first,
-    );
-    incidencias.insert(0, nuevo);
-    cantidadPendientes++;
-    await datos.guardar(incidencias);
+  Future<void> cambiarPrioridad(String id, String prioridad) async {
+    if (!Incidencia.prioridades.contains(prioridad)) {
+      throw ArgumentError('La prioridad debe ser Baja, Media o Alta.');
+    }
+
+    final incidencia = porId(id);
+
+    if (incidencia == null) {
+      throw StateError('No se encontró la incidencia.');
+    }
+
+    final prioridadAnterior = incidencia.prioridad;
+    incidencia.prioridad = prioridad;
+
+    try {
+      await datos.guardar(incidencias);
+    } catch (_) {
+      incidencia.prioridad = prioridadAnterior;
+      rethrow;
+    }
   }
+
+  Future<void> crear(
+  String titulo,
+  String descripcion,
+  String cliente,
+  String categoria, {
+  String prioridad = 'Media',
+}) async {
+  if (!Incidencia.prioridades.contains(prioridad)) {
+    throw ArgumentError('La prioridad debe ser Baja, Media o Alta.');
+  }
+
+  final nuevo = Incidencia(
+    id: 'INC-${DateTime.now().microsecondsSinceEpoch}',
+    titulo: titulo,
+    descripcion: descripcion,
+    cliente: cliente,
+    categoria: categoria,
+    estado: 'Pendiente',
+    fecha: DateTime.now().toIso8601String().split('T').first,
+    prioridad: prioridad,
+  );
+
+  incidencias.insert(0, nuevo);
+  cantidadPendientes++;
+  await datos.guardar(incidencias);
+}
 
   Future<void> reiniciarDemo() async {
     await datos.restaurarDatosDeEjemplo();

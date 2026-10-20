@@ -29,6 +29,28 @@ class _PantallaDetalleState extends State<PantallaDetalle> {
     }
   }
 
+  Future<void> cambiarPrioridad(String? valor) async {
+  if (valor == null || guardando) return;
+
+  setState(() => guardando = true);
+
+  try {
+    await widget.gestor.cambiarPrioridad(widget.id, valor);
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo cambiar la prioridad: $e'),
+        ),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => guardando = false);
+    }
+  }
+}
+
   Widget fila(String etiqueta, String valor) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
@@ -70,12 +92,28 @@ class _PantallaDetalleState extends State<PantallaDetalle> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: item.estado,
+                      initialValue: item.estado,
                       decoration: const InputDecoration(labelText: 'Estado actual', border: OutlineInputBorder()),
                       items: ['Pendiente', 'En proceso', 'Resuelta']
                           .map((v) => DropdownMenuItem(value: v, child: Text(v)))
                           .toList(),
                       onChanged: guardando ? null : cambiar,
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      key: ValueKey(item.prioridad),
+                      initialValue: item.prioridad,
+                      decoration: const InputDecoration(
+                        labelText: 'Prioridad',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: Incidencia.prioridades.map((valor) {
+                        return DropdownMenuItem<String>(
+                          value: valor,
+                          child: Text(valor),
+                        );
+                      }).toList(),
+                      onChanged: guardando ? null : cambiarPrioridad,
                     ),
                     if (guardando) const Padding(
                       padding: EdgeInsets.only(top: 12), child: LinearProgressIndicator(),
