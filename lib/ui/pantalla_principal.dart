@@ -16,11 +16,30 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
   bool cargando = true;
   String? error;
   String busqueda = '';
+  String filtroEstado = 'Todos';
+  String filtroPrioridad = 'Todas';
+  final controlBusqueda = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     cargar();
+  }
+
+  @override
+  void dispose() {
+    controlBusqueda.dispose();
+    super.dispose();
+  }
+
+  void limpiarFiltros() {
+    controlBusqueda.clear();
+
+    setState(() {
+      busqueda = '';
+      filtroEstado = 'Todos';
+      filtroPrioridad = 'Todas';
+    });
   }
 
   Future<void> cargar() async {
@@ -84,7 +103,12 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
 
   @override
   Widget build(BuildContext context) {
-    final items = g.buscar(busqueda);
+    final items = g.buscar(
+      busqueda,
+      estado: filtroEstado,
+      prioridad: filtroPrioridad,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('NexaSoft | Incidencias'),
@@ -151,6 +175,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 5),
                           child: TextField(
+                            controller: controlBusqueda,
                             decoration: const InputDecoration(
                               labelText: 'Buscar incidencias',
                               hintText: 'Ejemplo: WiFi, correo, pantalla',
@@ -158,6 +183,78 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                               border: OutlineInputBorder(),
                             ),
                             onChanged: (texto) => setState(() => busqueda = texto),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 17,
+                            vertical: 8,
+                          ),
+                          child: Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 180,
+                                child: DropdownButtonFormField<String>(
+                                  key: ValueKey('estado-$filtroEstado'),
+                                  initialValue: filtroEstado,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Estado',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: [
+                                    'Todos',
+                                    'Pendiente',
+                                    'En proceso',
+                                    'Resuelta',
+                                  ].map((valor) {
+                                    return DropdownMenuItem<String>(
+                                      value: valor,
+                                      child: Text(valor),
+                                    );
+                                  }).toList(),
+                                  onChanged: (valor) {
+                                    setState(() {
+                                      filtroEstado = valor ?? 'Todos';
+                                    });
+                                  },
+                                ),
+                              ),
+                              SizedBox(
+                                width: 180,
+                                child: DropdownButtonFormField<String>(
+                                  key: ValueKey('prioridad-$filtroPrioridad'),
+                                  initialValue: filtroPrioridad,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Prioridad',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: [
+                                    'Todas',
+                                    ...Incidencia.prioridades,
+                                  ].map((valor) {
+                                    return DropdownMenuItem<String>(
+                                      value: valor,
+                                      child: Text(valor),
+                                    );
+                                  }).toList(),
+                                  onChanged: (valor) {
+                                    setState(() {
+                                      filtroPrioridad = valor ?? 'Todas';
+                                    });
+                                  },
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: limpiarFiltros,
+                                icon: const Icon(Icons.filter_alt_off),
+                                label: const Text('Limpiar filtros'),
+                              ),
+                            ],
                           ),
                         ),
                         Padding(
